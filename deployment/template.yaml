@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Adobe Search Keyword Performance Analyzer.
+  Processes hit-level data from S3 and outputs revenue by search engine keyword.
+
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 512
+    Runtime: python3.13
+
+Resources:
+
+  # S3 bucket for input data and output results
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "adobe-hit-level-data-${AWS::AccountId}"
+
+  # Lambda function for processing hit-level data
+  SearchKeywordProcessor:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: SearchKeywordPerformanceProcessor
+      Handler: lambda_handler.lambda_handler
+      CodeUri: ../
+      Description: Processes hit-level data to calculate revenue by search engine keyword.
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Sub "adobe-hit-level-data-${AWS::AccountId}"
+      Events:
+        S3Upload:
+          Type: S3
+          Properties:
+            Bucket: !Ref DataBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: input/
+                  - Name: suffix
+                    Value: .sql
+
+Outputs:
+  ProcessorFunction:
+    Description: Lambda function ARN
+    Value: !GetAtt SearchKeywordProcessor.Arn
+  DataBucketName:
+    Description: S3 bucket for data files
+    Value: !Ref DataBucket
