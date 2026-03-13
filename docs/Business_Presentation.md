@@ -14,7 +14,7 @@ This report presents the findings from analyzing **esshopzilla.com's** hit-level
 | Metric | Value |
 |--------|-------|
 | **Total Revenue from Search Engines** | **$730.00** |
-| **Top Keyword** | "Ipod" via Google — **$290.00** |
+| **Top Keyword** | "ipod" via Google — **$480.00** |
 | **Top Search Engine** | Google — **$480.00** (65.8% of total) |
 | **Number of Search Engine Visitors** | 4 |
 | **Conversion Rate (Search → Purchase)** | 75% (3 of 4 visitors purchased) |
@@ -88,13 +88,14 @@ The **search engine referrer** (Google, Bing, Yahoo) only appears on the **first
 
 **If we only looked at the referrer on the purchase row, we would attribute $0 to search engines.**
 
-### The Solution — Session-Based Attribution
+### The Solution — First-Touch, Session-Based Attribution
 
-We track each visitor's **session** by their IP address:
+We track each visitor's **session** by their IP address using **first-touch attribution**:
 
-1. **First hit from a search engine** → Store the `(search_engine, keyword)` pair.
-2. **Later, when a purchase occurs** → Look up the visitor's session to find which search engine and keyword originally brought them to the site.
-3. **Attribute the revenue** to that search engine + keyword combination.
+1. **First hit from a search engine** → Store the `(search_engine, keyword)` pair. If the visitor later arrives from a different search engine, we keep the **first** one (first-touch attribution).
+2. **Keywords are normalized to lowercase** — "Ipod" and "ipod" are treated as the same keyword, so their revenue is combined.
+3. **Later, when a purchase occurs** → Look up the visitor's session to find which search engine and keyword originally brought them to the site.
+4. **Attribute the revenue** to that search engine + keyword combination.
 
 ---
 
@@ -114,9 +115,9 @@ We track each visitor's **session** by their IP address:
 | 8 | 07:06:01 | Order Confirmation | — | esshopzilla.com |
 | 9 | 07:07:40 | **Order Complete** | **Purchase** | esshopzilla.com |
 
-**Attribution:** Google → keyword "Ipod" → **$290.00** (Ipod Touch 32GB)
+**Attribution:** Google → keyword "ipod" → **$290.00** (Ipod Touch 32GB)
 
-**Insight:** This visitor compared products (viewed Nano, then Touch) before purchasing the premium option. The keyword "Ipod" successfully captured a high-value buyer.
+**Insight:** This visitor compared products (viewed Nano, then Touch) before purchasing the premium option. The keyword "ipod" successfully captured a high-value buyer.
 
 ---
 
@@ -130,7 +131,7 @@ We track each visitor's **session** by their IP address:
 | 4 | 06:52:49 | Order Confirmation | — | esshopzilla.com |
 | 5 | 06:57:46 | **Order Complete** | **Purchase** | esshopzilla.com |
 
-**Attribution:** Bing → keyword "Zune" → **$250.00** (Zune 32GB)
+**Attribution:** Bing → keyword "zune" → **$250.00** (Zune 32GB)
 
 **Insight:** This visitor had a very direct path — landed on the product page, added to cart, and purchased. High intent buyer from Bing. Fastest conversion in the dataset.
 
@@ -149,7 +150,7 @@ We track each visitor's **session** by their IP address:
 
 **Attribution:** Google → keyword "ipod" → **$190.00** (Ipod Nano 8GB)
 
-**Insight:** This visitor searched with lowercase "ipod" and landed on the Hot Buys page first, then went to the specific product. They chose the more affordable Nano model.
+**Insight:** This visitor searched for "ipod" and landed on the Hot Buys page first, then went to the specific product. They chose the more affordable Nano model. Since keywords are case-insensitive, this revenue is combined with Visitor 1's $290 for a total of $480 under "ipod".
 
 ---
 
@@ -171,9 +172,8 @@ We track each visitor's **session** by their IP address:
 
 ```
 Search Engine Domain    Search Keyword    Revenue
-google.com              Ipod              290.0
-bing.com                Zune              250.0
-google.com              ipod              190.0
+google.com              ipod              480.0
+bing.com                zune              250.0
 ```
 
 ### Revenue by Search Engine
@@ -201,31 +201,30 @@ google.com              ipod              190.0
 ┌────────────────────────────────────────────────────────────┐
 │                Revenue by Keyword                            │
 │                                                              │
-│  "Ipod"      ████████████████████████████████████  $290.00  │
-│  (Google)    (39.7%)                                         │
+│  "ipod"      ████████████████████████████████████  $480.00  │
+│  (Google)    (65.8%)                                         │
 │                                                              │
-│  "Zune"      ████████████████████████████         $250.00  │
+│  "zune"      ████████████████████████████         $250.00  │
 │  (Bing)      (34.2%)                                         │
-│                                                              │
-│  "ipod"      ██████████████████████               $190.00  │
-│  (Google)    (26.0%)                                         │
 │                                                              │
 │  "cd player" ░                                    $0.00    │
 │  (Yahoo)     (0.0%)                                          │
 └────────────────────────────────────────────────────────────┘
 ```
 
+> **Note:** Keywords are case-insensitive — "Ipod" and "ipod" from different visitors are combined into a single "ipod" entry.
+
 ---
 
 ## 6. Business Insights & Recommendations
 
 ### Insight 1: Google is the Dominant Revenue Driver
-- Google accounts for **$480 (65.8%)** of total search engine revenue.
-- Both Google keywords ("Ipod" and "ipod") converted to purchases.
+- Google accounts for **$480 (65.8%)** of total search engine revenue — all from the keyword "ipod".
+- Two separate visitors searched for "ipod" (with different casing) and both purchased.
 - **Recommendation:** Continue investing in Google SEO/SEM for electronics keywords.
 
 ### Insight 2: Bing Delivers High-Intent Buyers
-- Bing generated **$250** from a single keyword ("Zune") with the **fastest conversion path** (5 hits).
+- Bing generated **$250** from a single keyword ("zune") with the **fastest conversion path** (5 hits).
 - The visitor went directly from search → product → cart → purchase.
 - **Recommendation:** Don't overlook Bing. Despite lower traffic volume, Bing visitors may have higher purchase intent. Consider increasing Bing ad spend.
 
@@ -236,14 +235,8 @@ google.com              ipod              190.0
   - Review what products appear when visitors search "cd player" on esshopzilla.com.
   - Either stock CD players or adjust Yahoo ad targeting to exclude irrelevant keywords.
 
-### Insight 4: Keyword Case Sensitivity Reveals Different Audiences
-- "Ipod" (capitalized) → $290 purchase (premium Ipod Touch 32GB).
-- "ipod" (lowercase) → $190 purchase (budget Ipod Nano 8GB).
-- Different search behaviors may correlate with different buyer personas and price sensitivity.
-- **Recommendation:** Analyze whether keyword casing patterns correlate with higher-value purchases across larger datasets.
-
-### Insight 5: Product Comparison Drives Higher Revenue
-- Visitor 1 (Google, "Ipod") browsed **two products** before buying the more expensive one ($290).
+### Insight 4: Product Comparison Drives Higher Revenue
+- Visitor 1 (Google, "ipod") browsed **two products** before buying the more expensive one ($290).
 - Visitor 3 (Google, "ipod") went straight to one product and bought it ($190).
 - **Recommendation:** Ensure product comparison features are prominent — visitors who compare tend to buy premium options.
 
@@ -262,7 +255,7 @@ google.com              ipod              190.0
 │  │    Amazon S3     │    auto-trigger      │    AWS Lambda        │       │
 │  │                  │    on upload to      │    (Python 3.13)     │       │
 │  │  /input/         │ ──────────────────►  │                      │       │
-│  │    data.sql      │                      │  ┌────────────────┐  │       │
+│  │  *.sql/.tsv/.tab │                      │  ┌────────────────┐  │       │
 │  │                  │                      │  │ HitDataProcessor│  │       │
 │  └─────────────────┘                      │  │ ReferrerParser  │  │       │
 │                                            │  │ ProductParser   │  │       │
@@ -366,11 +359,17 @@ google.com              ipod              190.0
 
 When a visitor arrives from a search engine, we record that as their attribution source. If they later return from a different search engine, we **keep the first one**.
 
-**Why?** First-touch attribution credits the channel that originally **discovered** the customer. This is the most common model for SEO/SEM analysis.
+**Why?** First-touch attribution credits the channel that originally **discovered** the customer. This is the most common model for SEO/SEM analysis. This approach was confirmed with the hiring manager as the expected behavior.
 
 **Alternative:** Last-touch attribution would credit the most recent search engine before purchase. Both are valid — the choice depends on the client's marketing strategy.
 
-### Decision 3: Config-Driven Architecture
+### Decision 3: Case-Insensitive Keywords
+
+Keywords are **normalized to lowercase** before aggregation. "Ipod" and "ipod" are treated as the same keyword, and their revenue is combined.
+
+**Why?** Search engines are case-insensitive — a user searching "Ipod" and "ipod" has the same intent. Keeping them separate would fragment revenue data and make it harder for the client to assess keyword performance. This approach was confirmed with the hiring manager.
+
+### Decision 4: Config-Driven Architecture
 
 All settings (search engine definitions, event codes, column names, output format) are stored in `config/config.yaml`. This means:
 
@@ -378,13 +377,39 @@ All settings (search engine definitions, event codes, column names, output forma
 - **Different clients** with different column names can use the same code with different config files.
 - **Event codes** can be updated if the client's Adobe Analytics implementation changes.
 
-### Decision 4: Streaming File Processing
+### Decision 5: Streaming File Processing
 
 The file is read **line by line** using Python's `csv.DictReader` generator. The entire file is never loaded into memory. This makes the application capable of handling files much larger than available RAM.
 
+### Decision 6: Why Lambda?
+
+AWS Lambda was chosen as the deployment target for this project:
+
+- **Low operational overhead** — no servers to provision, patch, or scale. The function runs only when data arrives in S3.
+- **Cost-effective** — the sample file and typical hit-level exports (up to a few GB) fit within Lambda's 10 GB memory and 15-minute timeout limits. Free tier covers development and testing.
+- **Fast deployment cycle** — SAM CLI builds and deploys in under 2 minutes, enabling rapid iteration.
+- **S3 event-driven** — Lambda triggers automatically when a `.sql`, `.tsv`, or `.tab` file lands in the `input/` prefix, making the pipeline fully automated.
+
+**Trade-off:** For files exceeding 10 GB or requiring distributed processing, the recommended path is AWS Glue (PySpark) or Amazon EMR. See Scalability section below.
+
 ---
 
-## 9. Scalability — Handling 10GB+ Files
+## 9. Assumptions
+
+The following assumptions were made during development. Where applicable, these were confirmed with the hiring manager.
+
+| # | Assumption | Rationale |
+|---|-----------|-----------|
+| 1 | **Sessions identified by IP address** | The data file does not include cookies or visitor IDs. IP is the only consistent identifier across hits. In production, IP + User Agent + timestamp proximity would be more robust. |
+| 2 | **First-touch attribution** | If a visitor arrives via multiple search engines, the **first** referral receives credit. Confirmed with hiring manager. |
+| 3 | **Keywords are case-insensitive** | "Ipod" and "ipod" are treated as the same keyword. Search intent is identical regardless of casing. Confirmed with hiring manager. |
+| 4 | **Only purchase events (event code `1`) count toward revenue** | Per Appendix A of the requirements — revenue is only actualized when the purchase event is set in `event_list`. |
+| 5 | **Revenue is the 4th field (index 3) in `product_list`** | Per Appendix B — format is `Category;Name;Quantity;Revenue;CustomEvent`. Configurable via `config.yaml`. |
+| 6 | **Only search engines defined in config are considered** | Google, Bing, Yahoo, and MSN are configured by default. New engines can be added to `config.yaml` without code changes. |
+
+---
+
+## 10. Scalability — Handling 10GB+ Files
 
 The current application uses streaming I/O (line-by-line reading) which handles the file reading efficiently. The main memory concern is the **session tracking dictionary** which grows with the number of unique visitor IPs.
 
@@ -404,18 +429,18 @@ For details, see [SCALABILITY.md](../SCALABILITY.md).
 
 ---
 
-## 10. Quality Assurance
+## 11. Quality Assurance
 
 ### Test Coverage
 
 | Test Area | Tests | What's Validated |
 |-----------|-------|-----------------|
 | Config Loader | 4 | YAML loading, singleton pattern, missing file error, reset |
-| Referrer Parser | 11 | Google/Bing/Yahoo/MSN extraction, internal URLs, empty/null/malformed URLs, custom engines |
+| Referrer Parser | 12 | Google/Bing/Yahoo/MSN extraction, case-insensitive keywords, internal URLs, empty/null/malformed URLs, custom engines |
 | Product List Parser | 8 | Single/multiple products, decimal revenue, empty/null, custom field index |
 | Session Tracker | 5 | Track + retrieve, first-referral-only, unknown IP, multiple IPs |
-| End-to-End Processor | 6 | Full pipeline with sample data, no-purchase scenario, direct traffic exclusion, output format, actual data.sql validation |
-| **Total** | **35** | |
+| End-to-End Processor | 7 | Full pipeline with sample data, full integration (process → write → verify file), no-purchase scenario, direct traffic exclusion, output format, actual data.sql validation |
+| **Total** | **37** | |
 
 ### Logging & Monitoring
 
@@ -424,18 +449,18 @@ Every step of the pipeline is logged at appropriate levels:
 | What Gets Logged | Log Level | Example |
 |-----------------|-----------|---------|
 | Pipeline start/end | INFO | `Search Keyword Performance Analyzer — Starting` |
-| New session detected | INFO | `New session tracked: ip=67.98.123.1, engine=google.com, keyword='Ipod'` |
-| Revenue attributed | INFO | `Revenue attributed: ip=23.8.61.21, engine=bing.com, keyword='Zune', revenue=250.00` |
+| New session detected | INFO | `New session tracked: ip=67.98.123.1, engine=google.com, keyword='ipod'` |
+| Revenue attributed | INFO | `Revenue attributed: ip=23.8.61.21, engine=bing.com, keyword='zune', revenue=250.00` |
 | Processing summary | INFO | `Rows processed: 21, Rows skipped: 0, Purchase events: 3` |
 | Skipped/malformed rows | WARNING | `Skipping row 15 due to error: ...` |
 | File/permission errors | ERROR | `Data file not found: /path/to/file` |
-| Parser internals | DEBUG | `Detected search engine referral: domain=google.com, keyword='Ipod'` |
+| Parser internals | DEBUG | `Detected search engine referral: domain=google.com, keyword='ipod'` |
 
 In AWS, all logs are automatically available in **Amazon CloudWatch** for real-time monitoring and historical analysis.
 
 ---
 
-## 11. How to Reproduce Results
+## 12. How to Reproduce Results
 
 ### Option A: Run Locally
 ```bash
@@ -474,24 +499,24 @@ aws s3 cp s3://adobe-hit-level-data-214888068638/output/ ./output/ --recursive
 
 ### Option C: Run Tests
 ```bash
-python -m pytest tests/ -v    # 35 tests, all passing
+python -m pytest tests/ -v    # 37 tests, all passing
 ```
 
 ---
 
-## 12. Summary
+## 13. Summary
 
 | Question | Answer |
 |----------|--------|
 | **Total search engine revenue?** | **$730.00** |
 | **Which engine drives the most revenue?** | **Google — $480.00 (65.8%)** |
-| **Which keyword performs best?** | **"Ipod" via Google — $290.00** |
+| **Which keyword performs best?** | **"ipod" via Google — $480.00** |
 | **Are there underperforming channels?** | **Yahoo — $0 revenue** (keyword mismatch: "cd player") |
 | **Does Bing matter?** | **Yes — $250 from a single high-intent buyer** |
 
 ### Actionable Recommendations
 
-1. **Double down on Google electronics keywords** — "Ipod" variants alone generated $480.
+1. **Double down on Google electronics keywords** — "ipod" alone generated $480.
 2. **Invest in Bing** — Lower volume but higher purchase intent (fastest conversion).
 3. **Fix Yahoo keyword targeting** — "cd player" visitors aren't finding what they need.
 4. **Enable product comparison features** — Visitors who compare products buy premium options.

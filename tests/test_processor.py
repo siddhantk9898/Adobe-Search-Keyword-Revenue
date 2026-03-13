@@ -50,9 +50,9 @@ class TestHitDataProcessor:
 
             assert len(results) == 2
 
-            # Sorted by revenue descending
-            assert results[0] == ("google.com", "Ipod", 290.0)
-            assert results[1] == ("bing.com", "Zune", 250.0)
+            # Sorted by revenue descending (keywords are lowercased)
+            assert results[0] == ("google.com", "ipod", 290.0)
+            assert results[1] == ("bing.com", "zune", 250.0)
         finally:
             os.unlink(temp_path)
 
@@ -127,6 +127,74 @@ class TestHitDataProcessor:
                 assert "google.com" in lines[1]
                 assert "290" in lines[1]
 
+    def test_end_to_end_process_and_write_output(self):
+        """Full integration: process fixture file → write output → verify file contents."""
+        config = _get_config()
+        # Multi-visitor fixture: 2 search engine visitors with purchases, 1 direct visitor
+        fixture_data = (
+            "hit_time_gmt\tdate_time\tuser_agent\tip\tevent_list\tgeo_city\tgeo_region\t"
+            "geo_country\tpagename\tpage_url\tproduct_list\treferrer\n"
+            # Visitor A: Google "laptop" → browse → purchase $500
+            '1254033280\t2009-09-27 06:34:40\tMozilla/5.0\t10.0.0.1\t2\tCity\tST\tUS\t'
+            'Home\thttp://example.com\t\t'
+            'http://www.google.com/search?q=Laptop\n'
+            '1254033380\t2009-09-27 06:36:20\tMozilla/5.0\t10.0.0.1\t1\tCity\tST\tUS\t'
+            'Order Complete\thttp://example.com/checkout\t'
+            'Computers;Laptop Pro;1;500;\t'
+            'http://example.com/cart\n'
+            # Visitor B: Bing "headphones" → purchase $75
+            '1254033480\t2009-09-27 06:38:00\tMozilla/5.0\t10.0.0.2\t\tCity\tST\tUS\t'
+            'Home\thttp://example.com\t\t'
+            'http://www.bing.com/search?q=Headphones\n'
+            '1254033580\t2009-09-27 06:39:40\tMozilla/5.0\t10.0.0.2\t1\tCity\tST\tUS\t'
+            'Order Complete\thttp://example.com/checkout\t'
+            'Audio;Headphones;1;75;\t'
+            'http://example.com/cart\n'
+            # Visitor C: Direct traffic → purchase $200 (should NOT appear in output)
+            '1254033680\t2009-09-27 06:41:20\tMozilla/5.0\t10.0.0.3\t1\tCity\tST\tUS\t'
+            'Order Complete\thttp://example.com/checkout\t'
+            'Electronics;Speaker;1;200;\t'
+            'http://example.com/products\n'
+        )
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as f:
+            f.write(fixture_data)
+            input_path = f.name
+
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                processor = HitDataProcessor(config)
+                results = processor.process_file(input_path)
+                output_path = processor.write_output(results, tmpdir)
+
+                # Verify output file exists and has correct name
+                assert os.path.exists(output_path)
+                assert output_path.endswith("_SearchKeywordPerformance.tab")
+
+                # Read and verify file contents
+                with open(output_path, "r") as f:
+                    lines = f.readlines()
+
+                # Header + 2 data rows (direct traffic excluded)
+                assert len(lines) == 3
+
+                # Header
+                assert "Search Engine Domain" in lines[0]
+                assert "Search Keyword" in lines[0]
+                assert "Revenue" in lines[0]
+
+                # Row 1: google.com, laptop, 500 (highest revenue first)
+                assert "google.com" in lines[1]
+                assert "laptop" in lines[1]
+                assert "500" in lines[1]
+
+                # Row 2: bing.com, headphones, 75
+                assert "bing.com" in lines[2]
+                assert "headphones" in lines[2]
+                assert "75" in lines[2]
+        finally:
+            os.unlink(input_path)
+
     def test_process_actual_data_file(self):
         """Integration test with the actual data.sql file."""
         config = _get_config()
@@ -137,8 +205,8 @@ class TestHitDataProcessor:
         processor = HitDataProcessor(config)
         results = processor.process_file(data_path)
 
-        # We expect 3 results from the sample data
-        assert len(results) == 3
+        # We expect 2 results (keywords are case-insensitive, so "Ipod" and "ipod" merge)
+        assert len(results) == 2
 
         # Verify sorted by revenue descending
         revenues = [r[2] for r in results]
@@ -146,4 +214,4 @@ class TestHitDataProcessor:
 
         # Verify total revenue
         total = sum(r[2] for r in results)
-        assert total == 730.0  # 290 + 250 + 190
+        assert total == 730.0  # 480 (ipod) + 250 (zune)

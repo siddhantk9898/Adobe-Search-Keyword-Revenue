@@ -23,7 +23,7 @@ class TestReferrerParser:
     def test_google_referrer(self):
         url = "http://www.google.com/search?hl=en&q=Ipod&aq=f"
         result = self.parser.parse(url)
-        assert result == ("google.com", "Ipod")
+        assert result == ("google.com", "ipod")
 
     def test_google_referrer_with_encoded_keyword(self):
         url = "http://www.google.com/search?q=cd+player&oq=cd+player"
@@ -34,7 +34,7 @@ class TestReferrerParser:
     def test_bing_referrer(self):
         url = "http://www.bing.com/search?q=Zune&go=&form=QBLH"
         result = self.parser.parse(url)
-        assert result == ("bing.com", "Zune")
+        assert result == ("bing.com", "zune")
 
     # --- Yahoo ---
     def test_yahoo_referrer(self):
@@ -68,6 +68,13 @@ class TestReferrerParser:
     def test_malformed_url_returns_none(self):
         result = self.parser.parse("not-a-url")
         assert result is None
+
+    # --- Case insensitivity ---
+    def test_keywords_are_lowercased(self):
+        """Keywords should be normalized to lowercase for aggregation."""
+        url = "http://www.google.com/search?q=IPOD"
+        result = self.parser.parse(url)
+        assert result == ("google.com", "ipod")
 
     # --- Config-driven: custom search engine ---
     def test_custom_search_engine(self):

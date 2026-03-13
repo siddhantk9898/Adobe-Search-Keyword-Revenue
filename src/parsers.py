@@ -46,7 +46,7 @@ class ReferrerParser:
                     keywords = query_params.get(query_param, [])
 
                     if keywords and keywords[0].strip():
-                        keyword = keywords[0].strip()
+                        keyword = keywords[0].strip().lower()
                         logger.debug("Search engine referral: domain=%s, keyword='%s'",
                                      domain, keyword)
                         return (domain, keyword)
